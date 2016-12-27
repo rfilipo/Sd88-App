@@ -1,0 +1,20 @@
+body {
+background: url("/img/bg.jpg");
+background-repeat: repeat;
+}
+div#header{
+background: url("/img/header.png");
+background-repeat: no-repeat;
+position: fixed;
+top: 0px;
+height: 177px;
+width: 99%;
+}
+div#menu{
+background: url("/img/menu.png");
+background-repeat: repeat;
+bottom: 6px;
+position: fixed;
+height: 24px;
+width: 99%;
+}
