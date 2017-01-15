@@ -17,9 +17,10 @@ sub auth {
 
 sub menu { 
   my $c = shift;
+  my $id = $c->param("id");
   $c->render( json => { 
      msg  => "OK", 
-     menu => $c->menus->get_menu,
+     menu => $c->menus->get_menu($id),
   });
 }
 

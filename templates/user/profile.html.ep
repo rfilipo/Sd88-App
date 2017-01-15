@@ -1,0 +1,8 @@
+% layout 'default';
+% title 'User Profile'; 
+<div class="title"><%= $title %></div>
+<div class="section">
+<% foreach my $key ($user){ %>
+<div class="field" id="field_<%= $key %>"><%= $user->{$key} %></div>
+<% } %>
+<div>

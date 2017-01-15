@@ -1,9 +1,10 @@
 <html>
+
 <head>
-<!--
+    <!--
     index.html
-    
-    Copyright 2017 Ricardo Filipo (Monsenhor) filipo@kobkob.org  
+
+    Copyright 2017 Ricardo Filipo (Monsenhor) filipo@kobkob.org
 
     This file is part of Sd88 App Framework.
 
@@ -20,14 +21,27 @@
     You should have received a copy of the GNU Affero General Public License
     along with Sd88 App Framework.  If not, see <http://www.gnu.org/licenses/>.
 -->
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
-<meta http-equiv="Pragma" content="no-cache"/>
-<meta http-equiv="Expires" content="0"/>
-<LINK REL=StyleSheet HREF="css/style.css" TYPE="text/css" MEDIA=screen>
-<script src="js/main.js"></script>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <LINK REL=StyleSheet HREF="css/style.css" TYPE="text/css" MEDIA=screen>
+    <script src="js/main.js"></script>
+    <script>
+        // TODO: cordova stuff
+        /////////////////////////////////////
+        console.log("Load page content ... ");
+        sd88.contentById(0, function(content) {
+            console.log("The content: ", content);
+            // do something with the content
+        });
+    </script>
+<meta name="sd88-key" content="1234567">
 </head>
+
 <body>
-<div id="header"></div>
-<div id="menu"></div>
+    <div id="header" class="right"></div>
+    <div id="content"></div>
+    <div id="menu"></div>
 </body>
+
 </html>

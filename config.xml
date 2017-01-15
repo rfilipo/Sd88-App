@@ -1,12 +1,78 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="io.cordova.hellocordova" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-  <name>HelloCordova</name>
+<widget id="org.kobkob.sd88app" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+  <name>Sd88 App</name>
   <description>
-      A sample Apache Cordova application that responds to the deviceready event.
+      A bootstrap for a Websocket based Apache Cordova application with a mojolicious server.
   </description>
-  <author email="dev@cordova.apache.org" href="http://cordova.io">
-      Apache Cordova Team
+  <author email="filipo@kobkob.org" href="http://kobkob.org">
+      Monsenhor Filipo
   </author>
+  <api>
+    <ws>
+      <type>REQUEST</type>
+      <schema>
+        <id>sample-command</id>
+        <type>object</type>
+	<required>email</required> 
+	<required>password</required> 
+        <properties>
+          <email><type>string</type></email>
+          <password><type>string</type></password>
+        </properties>
+      </schema>
+      <command>
+        <name>sample_cmd</name>
+        <perl><![CDATA[
+           sub {
+		my $self = shift;
+		my $data = shift;
+
+           use Data::Dumper;
+           print Dumper $data->data;
+
+		#print "cmd1($data)$/";
+		$data->reply("echo: " . $data->data)
+	   }
+         ]]></perl>
+      </command>
+    </ws>
+    <ws>
+      <type>REQUEST</type>
+      <schema>
+        <id>register-user-command</id>
+        <type>object</type>
+	<required>email</required> 
+	<required>password</required> 
+        <properties>
+          <email><type>string</type></email>
+          <password><type>string</type></password>
+        </properties>
+      </schema>
+      <command>
+        <name>register</name>
+      </command>
+    </ws>
+    <ws>
+      <type>REQUEST</type>
+      <schema>
+        <id>modify-user-command</id>
+        <type>object</type>
+	<required>auth_key</required> 
+	<required>api_key</required> 
+	<required>email</required> 
+	<required>password</required> 
+        <properties>
+          <auth_key><type>string</type></auth_key>
+          <api_key><type>string</type></api_key>
+          <email><type>string</type></email>
+          <password><type>string</type></password>
+        </properties>
+      </schema>
+      <command>
+        <name>modify</name>
+      </command>
+    </ws>
+  </api>
   <content src="index.html" />
   <plugin name="cordova-plugin-whitelist" spec="1" />
   <access origin="*" />

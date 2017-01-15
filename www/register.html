@@ -1,0 +1,56 @@
+<html>
+<head>
+<!--
+    register.html
+    
+    Copyright 2017 Ricardo Filipo (Monsenhor) filipo@kobkob.org  
+
+    This file is part of Sd88 App Framework.
+
+    Sd88 App Framework is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Sd88 App Framework is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with Sd88 App Framework.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<LINK REL=StyleSheet HREF="css/style.css" TYPE="text/css" MEDIA=screen>
+<script src="js/main.js"></script>
+<script>
+
+</script>
+</head>
+<body>
+<div id="header"></div>
+<div id="content">
+<div class="section" id="register-section">
+<h1>Register new user</h1>
+<div>E-mail: <input id="email"></div>
+<div>Password: <input type="password" id="password"></div>
+<button id="register">Register</button>
+<script>
+console.log ("Opening Register Page");
+console.log (sd88);
+var registerBtn = document.querySelector( "#register");
+registerBtn.addEventListener("click", function (){
+  var email = document.querySelector( "#email");
+  var password = document.querySelector( "#password");
+  sd88.register(email.value, password.value, function(r){
+    console.log("Response from Register: ", r);
+  });
+});
+</script>
+</div>
+</div>
+<div id="menu"></div>
+</body>
+</html>

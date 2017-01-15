@@ -1,11 +1,9 @@
-package Sd88::App::Model::Users;
-#ABSTRACT: Model for Users objects, they have id, email, password and credits
+package Sd88::App::Model::Auth;
+#ABSTRACT: Model for Auth objects, they have id, email, password and credits
 #use base Sd88::App::Model;
 #use Mojo::Base 'Sd88::App::Model';
-use Mojo::Util qw(secure_compare);
-use Mojo::Util qw(sha1_sum);
+use Mojo::Util 'secure_compare';
 use DBI;
-my $counter;
 
 sub new { 
   my $self=shift; 
@@ -14,25 +12,12 @@ sub new {
   }, $self;
 }
 
-sub hashfy {
-	my $self	= shift;
-        my $password    = shift;
-	return sha1_sum join " ", localtime time, $counter++, $password;
-}
-
-
-
-sub generate_token {
-	my $self	= shift;
-	return sha1_sum join " ", localtime time, $self, $$, $counter++, map {int rand() * 10000} 0 .. rand() * 10;
-}
-
 
 =method create
 
-Create user with name, email and credits
+Create auth with email and key
 
-  $user->create(email => "filipo@kobkob.org", password => "Banana", credits => 100);
+  $auth->create(email => "filipo@kobkob.org", auth => "123");
 
 
 =cut
@@ -43,14 +28,13 @@ use Mojo::Log;
 use Data::Dumper;
 my $log = Mojo::Log->new;
 
-$log->debug ("user->create()");
+$log->debug ("auth->create()");
 #print Dumper \@_;
 
   my $self = shift;
   my $q = {@_};
   my $email = $q->{email} || $self->{email} || return undef;
-  my $password = $self->hashfy($q->{password}) || $self->hashfy($self->{password}) || return undef;
-  my $credits = $q->{credits} || $self->{credits} || return undef;
+  my $key = $q->{auth_key} || $self->{auth_key} || return undef;
   my $sth;
 
 $log->debug ("Calling DBI:\n");
@@ -60,15 +44,15 @@ $log->debug ("Calling DBI:\n");
 my $flag = 1;
 
 eval {
-  $sth = $self->{db}->prepare('INSERT INTO users (email, password, credits, create_time) VALUES (?,?,?, strftime(\'%s\',\'now\'))');
+  $sth = $self->{db}->prepare('INSERT INTO auth (email, key, create_time) VALUES (?,?, strftime(\'%s\',\'now\'))');
 }; if ($@){
   print "Error: ";
   use Data::Dumper;
   print Dumper $@;
-  return "ERROR";
+  return undef;
 }
 eval {
-  $flag = $sth->execute($email, $password, $credits);
+  $flag = $sth->execute($email, $key);
 }; if ($@ || $flag == 0){
   print "Error: $flag\n";
   use Data::Dumper;
@@ -78,12 +62,12 @@ eval {
   return undef
 }
 
-$log->debug("Creating new user:\n");
+$log->debug("Creating new auth:\n");
 #print Dumper $sth; 
 
 #=cut
 
-  return $self->generate_token;
+  return $key;
 }
   
 
@@ -103,7 +87,7 @@ sub read {
   my $self = shift;
   my ($q, $v) = map{$_}@_;
   my $sth = eval { $self->db->prepare(
-     'SELECT * FROM users WHERE '.$q.'='.$v
+     'SELECT * FROM people WHERE '.$q.'='.$v
   ) } || return undef;
   $sth->execute;
   return $sth->fetchall_arrayref;
@@ -156,7 +140,7 @@ sub delete {
   my $self = shift;
   my ($q, $v) = map{$_}@_;
   my $sth = eval { $self->db->prepare(
-     'DELETE FROM users WHERE '.$q.'='.$v
+     'DELETE FROM people WHERE '.$q.'='.$v
   ) } || return undef;
   $sth->execute;
   return 1;
@@ -175,7 +159,7 @@ sub check {
 
   # Success
   return 1 if $self->read (email => $email)->{password} && 
-    secure_compare  $self->read (email => $email)->{password} , $self->hashfy($password);
+    secure_compare  $self->read (email => $email)->{password} , $password;
 
   # Fail
   return undef;

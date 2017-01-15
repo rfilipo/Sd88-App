@@ -13,7 +13,11 @@ sub register {
 }
 sub profile {
   my $c = shift;
-  $c->reply->static('profile.html');
+  my $id = $c->param('id');
+  $c->stash( title  => "User profile - $id");
+  $c->users->read( id => $id );
+  $c->stash( user  => $c->users);
+  $c->render(template => 'user/profile');
 }
 sub login {
   my $c = shift;
@@ -29,7 +33,13 @@ sub invite {
 }
 sub content {
   my $c = shift;
-  $c->reply->static('content.html');
+  my $id = $c->param('id');
+  $c->stash( title  => $id);
+  my $content = $c->contents->get_content( $id );
+use Data::Dumper;
+print Dumper $content;
+  $c->stash( content  => $content);
+  $c->render(template => 'content/main');
 }
 sub setup {
   my $c = shift;

@@ -23,6 +23,6 @@
 var VERSION = "0.0.1";
 console.log("Sd88 app version "+VERSION);
 // load sd88 framework
-document.write("<script src='js/framework.js'></script>");
+document.write("<script src='/js/framework.js'></script>");
 // load sd88 app
-document.write("<script src='js/app.js'></script>");
+document.write("<script src='/js/app.js'></script>");

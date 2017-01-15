@@ -8,10 +8,10 @@ sub create_routes{
   $r->get( '/' )                 ->to( 'app#index');
   $r->get( '/login' )            ->to( 'app#login');
   $r->get( '/logout' )           ->to( 'app#logout');
-  $r->get( '/profile' )          ->to( 'app#profile');
+  $r->get( '/profile/:id' )      ->to( 'app#profile');
   $r->get( '/register' )         ->to( 'app#register');
   $r->get( '/invite' )           ->to( 'app#invite');
-  $r->get( '/content/:id' )      ->to( 'app#login');
+  $r->get( '/content/:id' )      ->to( 'app#content');
 
   # API
   $r->get( '/api/auth' )         ->to( 'api#auth');
@@ -23,6 +23,7 @@ sub create_routes{
   $r->get( '/api/user/register' )->to( 'api#register_user');
   $r->get( '/api/user/invite' )  ->to( 'api#invite');
 
+  #$r->websocket( 'ws' )->to( 'ws#main');
 }
 
 1;

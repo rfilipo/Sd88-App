@@ -1,0 +1,169 @@
+<html>
+<head>
+<title>Highlight /home/filipo/projetos/sd88/Sd88-App/lib/Sd88/App.pm By Padre::Plugin::HTML::Export</title>
+</head>
+<body>
+<b>package</b>&nbsp;<font color="#007f00">Sd88::App</font>;<BR>
+<BR>
+<font color="#7f7f7f"><i>#&nbsp;ABSTRACT:&nbsp;Bootsptrap&nbsp;for&nbsp;a&nbsp;hybrid&nbsp;app</i></font><font color="#7f7f7f"><i><BR>
+</i></font><BR>
+<b>use</b>&nbsp;<font color="#007f00">Mojo::Base</font>&nbsp;<font color="#ffa500">'</font><font color="#ff0000">Mojolicious</font><font color="#ffa500">'</font>;<BR>
+<b>use</b>&nbsp;<font color="#007f00">Mojo::Log</font>;<BR>
+<b>use</b>&nbsp;<font color="#007f00">Sd88::App</font>::<font color="#007f00">Routes</font>;<BR>
+<b>use</b>&nbsp;<font color="#007f00">Sd88::App</font>::<font color="#007f00">WSCommands</font>;<BR>
+<b>use</b>&nbsp;<font color="#007f00">Sd88::App</font>::<font color="#007f00">Model</font>::<font color="#007f00">Users</font>;<BR>
+<b>use</b>&nbsp;<font color="#007f00">Sd88::App</font>::<font color="#007f00">Model</font>::<font color="#007f00">Auth</font>;<BR>
+<b>use</b>&nbsp;<font color="#007f00">Sd88::App</font>::<font color="#007f00">Model</font>::<font color="#007f00">Menu</font>;<BR>
+<b>use</b>&nbsp;<font color="#007f00">Sd88::App</font>::<font color="#007f00">Model</font>::<font color="#007f00">Contents</font>;<BR>
+<b>use</b>&nbsp;DBI;<BR>
+<b>use</b>&nbsp;<font color="#007f00">Config::Any</font>;<BR>
+<b>use</b>&nbsp;<font color="#007f00">Config::Any</font>::<font color="#007f00">XML</font>;<BR>
+<BR>
+<b>my</b>&nbsp;<font color="#0000ff">$VERSION</font>&nbsp;=&nbsp;<font color="#ffa500">"</font><font color="#ff0000">0.0.1</font><font color="#ffa500">"</font>;<BR>
+<BR>
+<b>sub&nbsp;</b><font color="#007f00">startup</font>&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">$self</font>&nbsp;=&nbsp;<font color="#007f00">shift</font>;<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$self</font>-&gt;<font color="#0000ff">secrets</font>(&nbsp;[<font color="#ffa500">'</font><font color="#ff0000">im&nbsp;so&nbsp;secret</font><font color="#ffa500">'</font>]&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$self</font>-&gt;<font color="#0000ff">config</font>(<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hypnotoad&nbsp;=&gt;&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">listen</font>&nbsp;=&gt;&nbsp;[<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffa500">'</font><font color="#ff0000">https://*:443?cert=/etc/tls/domain.crt&amp;key=/etc/tls/domain.key</font><font color="#ffa500">'</font><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;);<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#&nbsp;change&nbsp;public&nbsp;dir&nbsp;to&nbsp;be&nbsp;compatible&nbsp;with&nbsp;cordova</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>&nbsp;<font color="#0000ff">@</font>{&nbsp;<font color="#0000ff">$self</font>-&gt;<font color="#0000ff">static</font>-&gt;<font color="#0000ff">paths</font>&nbsp;},&nbsp;<font color="#ffa500">'</font><font color="#ff0000">www</font><font color="#ffa500">'</font>;<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#&nbsp;connect&nbsp;to&nbsp;database</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">$dbh</font>&nbsp;=&nbsp;DBI-&gt;<font color="#007f00">connect</font>(&nbsp;<font color="#ffa500">"</font><font color="#ff0000">dbi:SQLite:app.db</font><font color="#ffa500">"</font>,&nbsp;<font color="#ffa500">""</font>,&nbsp;<font color="#ffa500">""</font>&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffa500">or</font>&nbsp;<font color="#007f00">die</font>&nbsp;<font color="#ffa500">"</font><font color="#ff0000">Could&nbsp;not&nbsp;connect</font><font color="#ffa500">"</font>;<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#&nbsp;read&nbsp;configuration</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">$config</font>&nbsp;=&nbsp;<font color="#007f00">Config::Any</font>::<font color="#007f00">XML</font>-&gt;load(<font color="#ffa500">'</font><font color="#ff0000">config.xml</font><font color="#ffa500">'</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">%CONF</font>&nbsp;&nbsp;&nbsp;=&nbsp;%<font color="#0000ff">$config</font>;<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#&nbsp;prepare&nbsp;and&nbsp;load&nbsp;WS&nbsp;Commands&nbsp;from&nbsp;config.xml&nbsp;api</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">$cmds</font>&nbsp;=<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">Sd88::App</font>::<font color="#007f00">WSCommands</font>-&gt;new(&nbsp;name&nbsp;=&gt;&nbsp;<font color="#ffa500">"</font><font color="#ff0000">SD88</font><font color="#ffa500">"</font>,&nbsp;version&nbsp;=&gt;&nbsp;<font color="#0000ff">$VERSION</font>&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">$schema</font>&nbsp;=<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">ref</font>(&nbsp;<font color="#0000ff">$CONF</font>{api}<font color="#ffa500">-</font>&gt;{ws}&nbsp;)&nbsp;<font color="#ffa500">eq</font>&nbsp;<font color="#ffa500">'</font><font color="#ff0000">ARRAY</font><font color="#ffa500">'</font><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;?&nbsp;<font color="#0000ff">$CONF</font>{api}<font color="#ffa500">-</font>&gt;{ws}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;[&nbsp;<font color="#0000ff">$CONF</font>{api}<font color="#ffa500">-</font>&gt;{ws}&nbsp;]&nbsp;||&nbsp;[&nbsp;{}&nbsp;];<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">$wspath</font>&nbsp;=&nbsp;<font color="#0000ff">$CONF</font>{wspath}&nbsp;||&nbsp;<font color="#ffa500">"</font><font color="#ff0000">/ws</font><font color="#ffa500">"</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">$cws</font>&nbsp;=&nbsp;<font color="#0000ff">$self</font>-&gt;<font color="#0000ff">plugin</font>(&nbsp;CommandWS&nbsp;=&gt;&nbsp;{&nbsp;path&nbsp;=&gt;&nbsp;<font color="#0000ff">$wspath</font>&nbsp;}&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">$api</font>&nbsp;=&nbsp;<font color="#0000ff">$cws</font>-&gt;<font color="#0000ff">conditional</font>(<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>sub&nbsp;</b>{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">$self</font>&nbsp;=&nbsp;<font color="#007f00">shift</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">$c</font>&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;<font color="#007f00">shift</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">$key</font>&nbsp;&nbsp;=&nbsp;<font color="#0000ff">$c</font>-&gt;{msg}<font color="#ffa500">-</font>&gt;{data}<font color="#ffa500">-</font>&gt;{api_key};<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#print&nbsp;"My&nbsp;api&nbsp;key:&nbsp;";</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#use&nbsp;Data::Dumper;&nbsp;print&nbsp;Dumper&nbsp;$key;</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$self</font>-&gt;<font color="#0000ff">validate_api_key</font>(<font color="#0000ff">$key</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$cmds</font>-&gt;<font color="#0000ff">create</font>(&nbsp;<font color="#0000ff">$api</font>,&nbsp;<font color="#0000ff">$schema</font>&nbsp;);<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#use&nbsp;Data::Dumper;</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#print&nbsp;"API&nbsp;at&nbsp;begin:";</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#print&nbsp;Dumper&nbsp;$cmds;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><BR>
+<font color="#7f7f7f"><i>=begin&nbsp;comment</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;$cmds</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;-&gt;type("REQUEST")</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;-&gt;schema({</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;"object",</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;required&nbsp;&nbsp;&nbsp;=&gt;&nbsp;[qw/auth_key&nbsp;api_key/],</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;properties&nbsp;&nbsp;&nbsp;=&gt;&nbsp;{</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;auth_key&nbsp;&nbsp;&nbsp;=&gt;&nbsp;{type&nbsp;=&gt;&nbsp;"string"},</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;api_key&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;{type&nbsp;=&gt;&nbsp;"string"},</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;})</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;-&gt;command(cmd1&nbsp;=&gt;&nbsp;sub&nbsp;{</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;my&nbsp;$self&nbsp;=&nbsp;shift;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;my&nbsp;$data&nbsp;=&nbsp;shift;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;use&nbsp;Data::Dumper;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;Dumper&nbsp;$data-&gt;data;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#print&nbsp;"cmd1($data)$/";</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$data-&gt;reply("echo:&nbsp;"&nbsp;.&nbsp;$data-&gt;data)</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;})</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>=cut</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;$self-&gt;helper(&nbsp;db&nbsp;=&gt;&nbsp;sub&nbsp;{&nbsp;$dbh&nbsp;}&nbsp;);</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;#$self-&gt;helper&nbsp;(&nbsp;db&nbsp;=&gt;&nbsp;$dbh&nbsp;);</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;$self-&gt;helper(</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;users&nbsp;=&gt;&nbsp;sub&nbsp;{</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;state&nbsp;$users&nbsp;=&nbsp;Sd88::App::Model::Users-&gt;new(&nbsp;$self-&gt;db&nbsp;);</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;);</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;$self-&gt;helper(</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;auth&nbsp;=&gt;&nbsp;sub&nbsp;{</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;state&nbsp;$auth&nbsp;=&nbsp;Sd88::App::Model::Auth-&gt;new(&nbsp;$self-&gt;db&nbsp;);</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;);</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;$self-&gt;helper(</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;menus&nbsp;=&gt;&nbsp;sub&nbsp;{</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;state&nbsp;$users&nbsp;=&nbsp;Sd88::App::Model::Menu-&gt;new(&nbsp;$self-&gt;db&nbsp;);</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;);</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;$self-&gt;helper(</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contents&nbsp;=&gt;&nbsp;sub&nbsp;{</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;state&nbsp;$users&nbsp;=&nbsp;Sd88::App::Model::Contents-&gt;new(&nbsp;$self-&gt;db&nbsp;);</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;);</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;$self-&gt;helper(</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;validate_api_key&nbsp;=&gt;&nbsp;sub&nbsp;{</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;"validate_api_key(@_)$/";</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;my&nbsp;$self&nbsp;=&nbsp;shift;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;my&nbsp;$key&nbsp;&nbsp;=&nbsp;shift;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;!!$key;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;);</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;$self-&gt;helper(</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;validate_auth_key&nbsp;=&gt;&nbsp;sub&nbsp;{</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;"validate_auth_key(@_)$/";</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;my&nbsp;$self&nbsp;=&nbsp;shift;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;my&nbsp;$key&nbsp;&nbsp;=&nbsp;shift;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;my&nbsp;$auth&nbsp;=&nbsp;$self-&gt;resultset("Auth")</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&gt;find(&nbsp;{&nbsp;auth_key&nbsp;=&gt;&nbsp;$key,&nbsp;logout&nbsp;=&gt;&nbsp;undef&nbsp;}&nbsp;);</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;($auth)&nbsp;{</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$self-&gt;stash-&gt;{device}&nbsp;=&nbsp;$auth-&gt;device;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$self-&gt;stash-&gt;{user}&nbsp;&nbsp;&nbsp;=&nbsp;$self-&gt;stash-&gt;{device}-&gt;user;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;$auth&nbsp;if&nbsp;$self-&gt;stash-&gt;{user}-&gt;active;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;);</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;Documentation&nbsp;browser&nbsp;under&nbsp;"/perldoc"</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;#$self-&gt;plugin('PODRenderer');</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;Routes</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;my&nbsp;$r&nbsp;=&nbsp;$self-&gt;routes;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>&nbsp;&nbsp;&nbsp;&nbsp;Sd88::App::Routes::create_routes($r);</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>}</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>=head1&nbsp;SEE&nbsp;ALSO</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>=for&nbsp;:list</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>*&nbsp;L&lt;Sd88::App::Model::Users&gt;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>*&nbsp;L&lt;Sd88::App::Model::Menu&gt;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>*&nbsp;L&lt;Sd88::App::Model::Contents&gt;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>=cut</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>1;</i></font><font color="#7f7f7f"><i><BR>
+</i></font></body>
+</html>
